@@ -1,0 +1,10 @@
+23:35:00 **** Incremental Build of configuration Debug for project 002_TOGGLE_LED_TMR_INTERRUPT ****
+make -j6 all 
+arm-none-eabi-size   002_TOGGLE_LED_TMR_INTERRUPT.elf 
+   text	   data	    bss	    dec	    hex	filename
+   9940	     20	   1780	  11740	   2ddc	002_TOGGLE_LED_TMR_INTERRUPT.elf
+Finished building: default.size.stdout
+ 
+
+23:35:00 Build Finished. 0 errors, 0 warnings. (took 475ms)
+
