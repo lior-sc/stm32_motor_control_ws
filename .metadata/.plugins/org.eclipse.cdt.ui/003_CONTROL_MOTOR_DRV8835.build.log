@@ -1,17 +1,10 @@
-00:10:25 **** Incremental Build of configuration Debug for project 003_CONTROL_MOTOR_DRV8835 ****
+17:14:30 **** Incremental Build of configuration Debug for project 003_CONTROL_MOTOR_DRV8835 ****
 make -j6 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F042x6 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "003_CONTROL_MOTOR_DRV8835.elf" @"objects.list"   -mcpu=cortex-m0 -T"/home/lior/git/lior-sc/stm32_motor_control_ws/003_CONTROL_MOTOR_DRV8835/STM32F042K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="003_CONTROL_MOTOR_DRV8835.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: 003_CONTROL_MOTOR_DRV8835.elf
- 
 arm-none-eabi-size   003_CONTROL_MOTOR_DRV8835.elf 
-arm-none-eabi-objdump -h -S  003_CONTROL_MOTOR_DRV8835.elf  > "003_CONTROL_MOTOR_DRV8835.list"
    text	   data	    bss	    dec	    hex	filename
-  23352	     20	   1780	  25152	   6240	003_CONTROL_MOTOR_DRV8835.elf
+  23360	     20	   1788	  25168	   6250	003_CONTROL_MOTOR_DRV8835.elf
 Finished building: default.size.stdout
  
-Finished building: 003_CONTROL_MOTOR_DRV8835.list
- 
 
-00:10:26 Build Finished. 0 errors, 0 warnings. (took 626ms)
+17:14:30 Build Finished. 0 errors, 0 warnings. (took 425ms)
 
