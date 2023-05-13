@@ -1,4 +1,6 @@
-.metadata/**
-.metadata/
+.metadata
+.vscode
+
+**/Debug/
 *.launch
-Debug/
+
