@@ -52,6 +52,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint32_t tim3_oc_max_value = 0;
+uint32_t duty_cycle = 0;
 
 /* USER CODE END PV */
 
@@ -81,10 +82,7 @@ int main(void)
 	double omega = TWO_PI * freqency;
 	double t = 0;
 	uint32_t dt = 10;
-	uint32_t duty_cycle = dt-1;
-
-
-
+	duty_cycle = dt+1;
 
   /* USER CODE END 1 */
 
