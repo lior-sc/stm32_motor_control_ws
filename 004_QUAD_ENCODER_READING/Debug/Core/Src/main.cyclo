@@ -1,7 +1,8 @@
-main.c:71:5:main	1
-main.c:117:6:SystemClock_Config	3
-main.c:152:13:MX_TIM2_Init	3
-main.c:201:13:MX_TIM3_Init	4
-main.c:250:13:MX_USART2_UART_Init	2
-main.c:285:13:MX_GPIO_Init	1
-main.c:327:6:Error_Handler	1
+main.c:73:5:main	1
+main.c:120:6:SystemClock_Config	3
+main.c:155:13:MX_TIM2_Init	3
+main.c:204:13:MX_TIM3_Init	4
+main.c:253:13:MX_TIM14_Init	2
+main.c:284:13:MX_USART2_UART_Init	2
+main.c:319:13:MX_GPIO_Init	1
+main.c:361:6:Error_Handler	1
