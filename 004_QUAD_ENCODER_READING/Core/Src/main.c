@@ -47,6 +47,8 @@ TIM_HandleTypeDef htim14;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+uint32_t timer_counter=0;
+
 
 /* USER CODE END PV */
 
@@ -99,6 +101,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+
 
   /* USER CODE END 2 */
 
@@ -192,6 +195,9 @@ static void MX_TIM2_Init(void)
   }
   /* USER CODE BEGIN TIM2_Init 2 */
 
+  // start encoder functionality
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+
   /* USER CODE END TIM2_Init 2 */
 
 }
@@ -239,6 +245,7 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
@@ -263,7 +270,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 4800-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 100-1;
+  htim14.Init.Period = 1000-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -271,6 +278,10 @@ static void MX_TIM14_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM14_Init 2 */
+  HAL_TIM_Base_Start_IT(&htim14);
+  HAL_NVIC_SetPriority(TIM14_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM14_IRQn);
+
 
   /* USER CODE END TIM14_Init 2 */
 
@@ -351,6 +362,16 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
+{
+	if(htim == &htim14)
+	{
+		// read the encoder ticks
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		timer_counter = __HAL_TIM_GET_COUNTER(&htim2);
+	}
+}
 
 /* USER CODE END 4 */
 
