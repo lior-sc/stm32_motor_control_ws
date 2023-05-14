@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stdbool.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,7 +48,8 @@ TIM_HandleTypeDef htim14;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint32_t timer_counter=0;
+int64_t encoder_counter = 0;
+int64_t encoder_overflow_value = -1 * (int64_t)UINT32_MAX;
 
 
 /* USER CODE END PV */
@@ -197,6 +199,9 @@ static void MX_TIM2_Init(void)
 
   // start encoder functionality
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+
+  // Set timer overflow interrupt
+  HAL_TIM_Base_Start_IT(&htim2);
 
   /* USER CODE END TIM2_Init 2 */
 
@@ -365,11 +370,30 @@ static void MX_GPIO_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 {
+	if(htim == &htim2)
+	{
+		// encoder counter overflow protection
+
+		// check if motor is rotating counter clockwise
+		bool counter_clockwise_rotation = (htim->Instance->CR1 & TIM_CR1_DIR);	// expands to non-zero value if motor rotates counter clockwise
+
+		if(counter_clockwise_rotation)
+		{
+			// substract uint32_t max value
+			encoder_overflow_value -= (int64_t)UINT32_MAX;
+		}
+		else
+		{
+			// add uint32_t max value
+			encoder_overflow_value += (int64_t)UINT32_MAX;
+		}
+
+	}
 	if(htim == &htim14)
 	{
 		// read the encoder ticks
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-		timer_counter = __HAL_TIM_GET_COUNTER(&htim2);
+		encoder_counter = (int64_t)__HAL_TIM_GET_COUNTER(&htim2) + encoder_overflow_value;
 	}
 }
 
