@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stdbool.h"
+#include "math.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -50,7 +51,6 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 int64_t encoder_counter = 0;
 int64_t encoder_overflow_value = -1 * (int64_t)UINT32_MAX;
-
 
 /* USER CODE END PV */
 
@@ -283,10 +283,11 @@ static void MX_TIM14_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM14_Init 2 */
+
+  // start timer and interrupt
   HAL_TIM_Base_Start_IT(&htim14);
   HAL_NVIC_SetPriority(TIM14_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM14_IRQn);
-
 
   /* USER CODE END TIM14_Init 2 */
 
@@ -391,8 +392,9 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 	}
 	if(htim == &htim14)
 	{
-		// read the encoder ticks
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+		// get current position
 		encoder_counter = (int64_t)__HAL_TIM_GET_COUNTER(&htim2) + encoder_overflow_value;
 	}
 }
