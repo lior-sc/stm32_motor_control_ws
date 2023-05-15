@@ -18,11 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "math.h"
-#include "stdbool.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "math.h"
+#include "stdbool.h"
 
 /* USER CODE END Includes */
 
@@ -130,9 +130,9 @@ int main(void)
   pid.err_integral = 0;
   pid.prev_err = 0;
   pid.control_effort = 0;
-  pid.Kp = 7.0;
-  pid.Ki = 2.0;
-  pid.Kd = 0.4;
+  pid.Kp = 4.0;
+  pid.Ki = 0.5;
+  pid.Kd = 0.2;
   pid.max_control_effort = (double)htim3.Init.Period-100;
   pid.max_integral_control_effort = pid.max_control_effort * 0.5;	// limit the integral control effort to 0.5 max control effort
   pid.dt = 1 / pid_interrupt_freq;
@@ -315,7 +315,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 4800-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 1000-1;
+  htim14.Init.Period = 50-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
