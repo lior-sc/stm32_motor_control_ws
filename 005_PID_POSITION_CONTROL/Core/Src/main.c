@@ -126,7 +126,7 @@ int main(void)
   double pid_interrupt_freq = timer_clk_freq / prescaler_div / period_div; // Hz
 
   // set pid values
-  pid.setpoint = 10000;
+  pid.setpoint = 500;
   pid.err_integral = 0;
   pid.prev_err = 0;
   pid.control_effort = 0;
@@ -156,6 +156,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  pid.setpoint *= -1;
+	  HAL_Delay(5000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
