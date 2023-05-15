@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "math.h"
+#include "stdbool.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,6 +49,23 @@ TIM_HandleTypeDef htim14;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+int64_t encoder_count = 0;
+int64_t encoder_overflow_count = -(int64_t)UINT32_MAX;
+
+typedef struct{
+	double setpoint;
+	double dt;
+	double err_integral;					// used for integral portion of controller
+	double prev_err;
+	double Kp;
+	double Ki;
+	double Kd;
+	double control_effort; 			// goes from -1 to 1
+	double max_control_effort; 	// equals pwm counter period
+	double max_integral_control_effort;
+} PID;
+
+PID pid;
 
 /* USER CODE END PV */
 
@@ -99,6 +118,37 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+
+  // get the timer interrupt frequency for future calculations
+  double timer_clk_freq = (double)HAL_RCC_GetPCLK1Freq();
+  double prescaler_div = (double)htim14.Init.Prescaler + 1;
+  double period_div = (double)htim14.Init.Period +1;
+  double pid_interrupt_freq = timer_clk_freq / prescaler_div / period_div; // Hz
+
+  // set pid values
+  pid.setpoint = 10000;
+  pid.err_integral = 0;
+  pid.prev_err = 0;
+  pid.control_effort = 0;
+  pid.Kp = 7.0;
+  pid.Ki = 2.0;
+  pid.Kd = 0.4;
+  pid.max_control_effort = (double)htim3.Init.Period-100;
+  pid.max_integral_control_effort = pid.max_control_effort * 0.5;	// limit the integral control effort to 0.5 max control effort
+  pid.dt = 1 / pid_interrupt_freq;
+
+  // start timer 2 (Encoders)
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  //start timer 3 (PWM)
+  HAL_TIM_Base_Start(&htim3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+
+  // start timer 14 (PID)
+  HAL_TIM_Base_Start_IT(&htim14);
+  HAL_NVIC_SetPriority(TIM14_IRQn,1,1);
+  HAL_NVIC_EnableIRQ(TIM14_IRQn);
 
   /* USER CODE END 2 */
 
@@ -272,6 +322,8 @@ static void MX_TIM14_Init(void)
   }
   /* USER CODE BEGIN TIM14_Init 2 */
 
+
+
   /* USER CODE END TIM14_Init 2 */
 
 }
@@ -351,6 +403,87 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
+{
+	if(htim == &htim2)
+	{
+		// overflow protection
+		bool counter_clockwise_rotation = (bool)(htim->Instance->CR1 & TIM_CR1_DIR);
+		if(counter_clockwise_rotation)
+		{
+			encoder_overflow_count -= (int64_t)UINT32_MAX;
+		}
+		else
+		{
+			encoder_overflow_count += (int64_t)UINT32_MAX;
+		}
+	}
+
+	else if(htim == &htim14)
+	{
+//		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+		// get current position
+		encoder_count = (int64_t)__HAL_TIM_GET_COUNTER(&htim2) + encoder_overflow_count;
+
+		// PID controller
+		double err = pid.setpoint - encoder_count;
+		double err_derivative = (err - pid.prev_err) / pid.dt;
+		pid.err_integral += err * pid.dt;
+
+		// err integral anti windup
+		if(fabs(pid.Ki * pid.err_integral) > pid.max_integral_control_effort)
+		{
+			if(signbit(pid.err_integral))
+			{
+				pid.err_integral = -pid.max_integral_control_effort/ pid.Ki;
+
+			}
+			else
+			{
+				pid.err_integral = pid.max_integral_control_effort / pid.Ki;
+			}
+		}
+
+		// calculate PID control effort component
+
+		pid.control_effort = pid.Kp * err + pid.Ki * pid.err_integral + pid.Kd * err_derivative;
+
+
+		if(fabs(pid.control_effort) > pid.max_control_effort)
+		{
+			if(signbit(pid.control_effort))
+			{
+				pid.control_effort = -pid.max_control_effort;
+			}
+			else
+			{
+				pid.control_effort = pid.max_control_effort;
+			}
+		}
+
+		// update PWM values
+		uint32_t control_effort = (uint32_t)(floor(fabs(pid.control_effort)));
+		if(pid.control_effort < 0)
+		{
+			HAL_GPIO_WritePin(motor_dir_GPIO_Port, motor_dir_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+			TIM3->CCR1 = (uint32_t)pid.max_control_effort - control_effort;
+		}
+		else
+		{
+			HAL_GPIO_WritePin(motor_dir_GPIO_Port, motor_dir_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+			TIM3->CCR1 = control_effort;
+		}
+//		HAL_GPIO_WritePin(motor_dir_GPIO_Port, motor_dir_Pin, GPIO_PIN_RESET);
+//		uint32_t duty_cycle = (uint32_t)(2000+1000*sin((double)HAL_GetTick()/1000));
+
+
+
+	}
+}
 
 /* USER CODE END 4 */
 
