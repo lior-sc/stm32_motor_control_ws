@@ -52,7 +52,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint32_t tim3_oc_max_value = 0;
-uint32_t duty_cycle = 0;
+
 
 /* USER CODE END PV */
 
@@ -82,7 +82,7 @@ int main(void)
 	double omega = TWO_PI * freqency;
 	double t = 0;
 	uint32_t dt = 10;
-	duty_cycle = dt+1;
+//	duty_cycle = dt+1;
 
   /* USER CODE END 1 */
 
@@ -118,26 +118,31 @@ int main(void)
 
   while (1)
   {
+	  uint32_t duty_cycle = 0;
+
 	  t = t + ((double)dt / 1000);
-	  double calc_duty_cycle = (tim3_oc_max_value - 1)*(0.25*(sin(omega * t)+0.75));
-//	  if(calc_duty_cycle < 0)
-//	  {
-//		  HAL_GPIO_TogglePin(motor_dir_GPIO_Port, motor_dir_Pin);
-//		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-//	  }
-	  duty_cycle = (uint32_t)fabs(calc_duty_cycle);
-//	  if(duty_cycle < 1000)
-//	  {
-//		  duty_cycle = 1000;
-//	  }
+	  double calc_duty_cycle = (tim3_oc_max_value - 1)*(0.75 * sin(omega * t));
 
-	  set_pwm_duty_cycle(duty_cycle);
+	  if(calc_duty_cycle < 0)
+	  {
+		  HAL_GPIO_TogglePin(motor_dir_GPIO_Port, motor_dir_Pin);
+		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	  }
 
-//	  if(duty_cycle <= dt)
-//	  {
-//		  HAL_GPIO_TogglePin(motor_dir_GPIO_Port, motor_dir_Pin);
-//		  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-//	  }
+	  if(signbit(calc_duty_cycle))
+	  {
+		  duty_cycle = (uint32_t)fabs(calc_duty_cycle);
+		  HAL_GPIO_WritePin(motor_dir_GPIO_Port, motor_dir_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+	  }
+	  else
+	  {
+		  duty_cycle = tim3_oc_max_value - (uint32_t)fabs(calc_duty_cycle);
+		  HAL_GPIO_WritePin(motor_dir_GPIO_Port, motor_dir_Pin, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+	  }
+
+	  TIM3->CCR1 = duty_cycle;	// set PWM duty cycle
 
 	  HAL_Delay(dt);
     /* USER CODE END WHILE */
@@ -310,23 +315,25 @@ static void MX_GPIO_Init(void)
 void set_pwm_duty_cycle(uint32_t duty_cycle)
 {
 	// configure output compare functionality
-	TIM_OC_InitTypeDef sConfigOC = {0};
-	sConfigOC.OCMode = TIM_OCMODE_PWM1;
-	sConfigOC.Pulse = duty_cycle;
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
+//	TIM_OC_InitTypeDef sConfigOC = {0};
+//	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+//	sConfigOC.Pulse = duty_cycle;
+//	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+//	sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
 
-	// stop PWM
-	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+//	// stop PWM
+//	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+//
+//	// configure channel
+//	if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+//	{
+//	Error_Handler();
+//	}
+//
+//	// start PWM
+//	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
-	// configure channel
-	if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-	{
-	Error_Handler();
-	}
-
-	// start PWM
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+	TIM3->CCR1 = duty_cycle;
 
 }
 
